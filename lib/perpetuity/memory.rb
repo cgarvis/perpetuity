@@ -55,6 +55,7 @@ module Perpetuity
     end
 
     def index klass, attribute, options={}
+      @indexes[klass] ||= Set.new
     end
 
     def indexes klass
@@ -62,7 +63,7 @@ module Perpetuity
     end
 
     def active_indexes klass
-      indexes
+      Set.new
     end
 
     def activate_index! klass
