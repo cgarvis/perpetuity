@@ -1,9 +1,10 @@
 require 'perpetuity'
 require 'test_classes'
 
-shared_examples Perpetuity do
+shared_examples 'mappable' do
   describe 'mapper generation' do
     it 'generates Perpetuity' do
+      p Perpetuity.configuration.data_source
       Perpetuity.generate_mapper_for Object
       Perpetuity[Object].should be_a Perpetuity::Mapper
     end
@@ -21,7 +22,9 @@ shared_examples Perpetuity do
       mapper.attributes.should eq [:object_id]
     end
   end
+end
 
+shared_examples 'persistable' do
   describe 'persistence' do
     it "persists an object" do
       article = Article.new 'I have a title'
@@ -90,8 +93,19 @@ shared_examples Perpetuity do
       Perpetuity[Book].insert book
       book.id.should eq "my-title-#{noise}"
     end
-  end
 
+    # The Message class stores its data members differently internally than it receives them
+    it 'uses accessor methods to read/write data' do
+      message = Message.new 'My Message!'
+      Perpetuity[Message].insert message
+      saved_message = Perpetuity[Message].find(message.id)
+      saved_message.instance_variable_get(:@text).should eq 'My Message!'.reverse
+      saved_message.text.should eq 'My Message!'
+    end
+  end
+end
+
+shared_examples 'crud' do
   describe "deletion" do
     it 'deletes an object' do
       2.times { Perpetuity[Article].insert Article.new }
@@ -213,6 +227,34 @@ shared_examples Perpetuity do
     end
   end
 
+  describe 'updating' do
+    let(:article) { Article.new }
+    let(:mapper) { Perpetuity[Article] }
+    let(:new_title) { 'I has a new title!' }
+
+    before do
+      mapper.insert article
+    end
+
+    it 'updates an object in the database' do
+      mapper.update article, title: new_title
+      mapper.find(article.id).title.should eq new_title
+    end
+
+    it 'updates the object in memory' do
+      mapper.update article, title: new_title
+      article.title.should eq new_title
+    end
+
+    it 'resaves the object in the database' do
+      article.title = new_title
+      mapper.save article
+      mapper.find(article.id).title.should eq new_title
+    end
+  end
+end
+
+shared_examples "pagination" do
   describe 'pagination' do
     it 'specifies the page we want' do
       Perpetuity[Article].retrieve.should respond_to :page
@@ -236,7 +278,9 @@ shared_examples Perpetuity do
       data.should have(1).item
     end
   end
+end
 
+shared_examples "associations" do
   describe 'associations with other objects' do
     let(:user) { User.new }
     let(:topic) { Topic.new }
@@ -268,33 +312,9 @@ shared_examples Perpetuity do
       retrieved_topic.creator.name.should eq 'Flump'
     end
   end
+end
 
-  describe 'updating' do
-    let(:article) { Article.new }
-    let(:mapper) { Perpetuity[Article] }
-    let(:new_title) { 'I has a new title!' }
-
-    before do
-      mapper.insert article
-    end
-
-    it 'updates an object in the database' do
-      mapper.update article, title: new_title
-      mapper.find(article.id).title.should eq new_title
-    end
-
-    it 'updates the object in memory' do
-      mapper.update article, title: new_title
-      article.title.should eq new_title
-    end
-
-    it 'resaves the object in the database' do
-      article.title = new_title
-      mapper.save article
-      mapper.find(article.id).title.should eq new_title
-    end
-  end
-
+shared_examples "validation" do
   describe 'validations' do
     let(:car_mapper) { Perpetuity[Car] }
 
@@ -308,15 +328,6 @@ shared_examples Perpetuity do
       car.make = "Volkswagen"
       expect { car_mapper.insert car }.not_to raise_error
     end
-  end
-
-  # The Message class stores its data members differently internally than it receives them
-  it 'uses accessor methods to read/write data' do
-    message = Message.new 'My Message!'
-    Perpetuity[Message].insert message
-    saved_message = Perpetuity[Message].find(message.id)
-    saved_message.instance_variable_get(:@text).should eq 'My Message!'.reverse
-    saved_message.text.should eq 'My Message!'
   end
 
   describe 'serialization' do
@@ -376,7 +387,9 @@ shared_examples Perpetuity do
       end
     end
   end
+end
 
+shared_examples "scopable" do
   describe 'methods on Perpetuity' do
     it 'allows methods to act as scopes' do
       published = Article.new('Published', 'I love cats', nil, Time.now - 30)
@@ -397,7 +410,9 @@ shared_examples Perpetuity do
       unpublished_ids.should include draft.id, not_yet_published.id
     end
   end
+end
 
+shared_examples "indexable" do
   describe 'indexing' do
     let(:mapper_class) do
       Class.new(Perpetuity::Mapper) do
