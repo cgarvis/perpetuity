@@ -1,3 +1,5 @@
+require 'securerandom'
+
 module Perpetuity
   class Memory
     def initialize options = {}
@@ -6,7 +8,9 @@ module Perpetuity
     end
 
     def insert klass, attributes
-      attributes[:id] = Digest::SHA1.hexdigest(Time.now.to_s)
+      unless attributes.has_key? :id
+        attributes[:id] = SecureRandom.uuid
+      end
       collection(klass) << attributes
       attributes[:id]
     end
@@ -52,6 +56,10 @@ module Perpetuity
           collection(klass)[index] = record.merge(new_data)
         end
       end
+    end
+
+    def can_serialize? value
+      true
     end
 
     def index klass, attribute, options={}
