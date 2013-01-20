@@ -27,7 +27,7 @@ module Perpetuity
     it 'gets the first document in a collection' do
       value = {value: 1}
       store.insert klass, value
-      store.first(klass)[:hypothetical_value].should == value['value']
+      store.first(klass)[:value].should == value['value']
     end
 
     it 'gets all of the documents in a collection' do

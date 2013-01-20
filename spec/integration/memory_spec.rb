@@ -3,8 +3,8 @@ require 'perpetuity/memory'
 require 'perpetuity_shared'
 
 describe Perpetuity::Memory do
-  store = Perpetuity::Memory.new
-  Perpetuity.configure { data_source store }
-
-  it_behaves_like Perpetuity, Perpetuity
+  context do
+    Perpetuity.configure { data_source Perpetuity::Memory.new }
+    it_behaves_like Perpetuity
+  end
 end

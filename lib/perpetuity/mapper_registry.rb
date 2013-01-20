@@ -13,5 +13,9 @@ module Perpetuity
     def self.[]= klass, mapper
       @mappers[klass] = mapper
     end
+
+    def self.clear
+      @mappers.clear
+    end
   end
 end

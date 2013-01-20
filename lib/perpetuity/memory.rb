@@ -11,6 +11,15 @@ module Perpetuity
       unless attributes.has_key? :id
         attributes[:id] = SecureRandom.uuid
       end
+
+      # make keys indifferent
+      attributes.default_proc = proc do |h, k|
+        case k
+          when String then sym = k.to_sym; h[sym] if h.key?(sym)
+          when Symbol then str = k.to_s; h[str] if h.key?(str)
+        end
+      end
+
       collection(klass) << attributes
       attributes[:id]
     end
@@ -29,8 +38,8 @@ module Perpetuity
 
     def retrieve klass, criteria, options = {}
       collection(klass).find_all do |r|
-        criteria.each do |field, value|
-          r.key? field and r[field] === value
+        criteria.all? do |field, value|
+          r[field] === value
         end
       end
     end
@@ -41,7 +50,7 @@ module Perpetuity
 
     def delete object, klass=nil
       klass ||= object.class
-      id = object.class == String || !object.respond_to(:id) ? object : object.id
+      id = object.class == String || !object.respond_to?(:id) ? object : object.id
 
       collection(klass).each_with_index do |record, index|
         if record[:id] === id
