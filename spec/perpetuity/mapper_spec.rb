@@ -46,7 +46,7 @@ module Perpetuity
       let(:mapper) { mapper_subclass.new }
 
       it 'can explicitly map a class' do
-        MapperRegistry[String].should be_instance_of mapper_subclass
+        Perpetuity[String].should be_instance_of mapper_subclass
       end
     end
   end

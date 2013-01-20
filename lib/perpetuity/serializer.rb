@@ -20,7 +20,7 @@ module Perpetuity
           serialize_array(value)
         elsif mapper.data_source.can_serialize? value
           value
-        elsif MapperRegistry.has_mapper?(value.class)
+        elsif Perpetuity.has_mapper?(value.class)
           serialize_with_foreign_mapper(value, attrib.embedded?)
         else
           if attrib.embedded?
@@ -36,7 +36,7 @@ module Perpetuity
 
     def serialize_with_foreign_mapper value, embedded = false
       if embedded
-        value_mapper = MapperRegistry[value.class]
+        value_mapper = Perpetuity[value.class]
         value_serializer = Serializer.new(value_mapper)
         attr = value_serializer.serialize(value)
         attr.merge '__metadata__' =>  { 'class' => value.class }
@@ -56,12 +56,12 @@ module Perpetuity
           serialize_array(value)
         elsif mapper.data_source.can_serialize? value
           value
-        elsif MapperRegistry.has_mapper?(value.class)
+        elsif Perpetuity.has_mapper?(value.class)
           {
             '__metadata__' => {
               'class' => value.class.to_s
             }
-          }.merge MapperRegistry[value.class].serialize(value)
+          }.merge Perpetuity[value.class].serialize(value)
         else
           Marshal.dump(value)
         end

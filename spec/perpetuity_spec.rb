@@ -1,7 +1,8 @@
 require 'perpetuity'
 
-mongodb = Perpetuity::MongoDB.new db: 'perpetuity_gem_test'
-Perpetuity.configure { data_source mongodb }
+Perpetuity.configure do |config|
+  config.data_source Perpetuity::MongoDB.new db: 'perpetuity_gem_test'
+end
 
 require 'test_classes'
 

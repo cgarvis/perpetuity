@@ -1,23 +1,21 @@
 require "perpetuity/version"
-require "perpetuity/retrieval"
-require "perpetuity/mongodb"
-require "perpetuity/config"
-require "perpetuity/mapper"
+require "perpetuity/repository"
 
 module Perpetuity
-  def self.configure &block
-    configuration.instance_exec(&block)
-  end
-  
-  def self.configuration
-    @configuration ||= Configuration.new
-  end
+  class << self
+    def repository
+      @repository = Perpetuity::Repository.new unless defined?(@repository)
+      @repository
+    end
 
-  def self.generate_mapper_for klass, &block
-    Mapper.generate_for klass, &block
-  end
+    def respond_to_missing?(method_name, include_private=false); repository.respond_to?(method_name, include_private); end if RUBY_VERSION >= "1.9"
+    def respond_to?(method_name, include_private=false); repository.respond_to?(method_name, include_private) || super; end if RUBY_VERSION < "1.9"
 
-  def self.[] klass
-    MapperRegistry[klass]
+    private
+
+    def method_missing(method_name, *args, &block)
+      return super unless repository.respond_to?(method_name)
+      repository.send(method_name, *args, &block)
+    end
   end
 end

@@ -16,7 +16,7 @@ module Perpetuity
     end
 
     def self.map klass
-      MapperRegistry[klass] = self
+      Perpetuity[klass] = self
       @mapped_class = klass
     end
 
@@ -123,7 +123,7 @@ module Perpetuity
       klass = reference.klass
       id = reference.id
 
-      inject_attribute object, attribute, MapperRegistry[klass].find(id)
+      inject_attribute object, attribute, Perpetuity[klass].find(id)
     end
 
     def self.id &block
